@@ -289,10 +289,164 @@ After running your hooks-based tests, visit the [LambdaTest Automation Dashboard
 
 Navigate to your SmartUI project in the [SmartUI Dashboard](https://smartui.lambdatest.com/) to see detailed visual regression results.
 
+## Best Practices
+
+### Screenshot Naming
+
+- Use descriptive, unique names for each screenshot
+- Follow Ruby naming conventions (snake_case)
+- Include page/component name and state
+- Avoid special characters
+
+### When to Take Screenshots
+
+- After critical user interactions
+- Before and after form submissions
+- At different stages of multi-step processes
+- After page state changes
+
+### Ruby-Specific Tips
+
+- Use explicit waits before taking screenshots
+- Handle exceptions properly with begin/rescue/ensure
+- Use descriptive variable names
+- Follow Ruby style guidelines
+
+### Example: Screenshot with Waits
+
+```ruby
+require 'selenium-webdriver'
+
+wait = Selenium::WebDriver::Wait.new(timeout: 10)
+wait.until { driver.find_element(id: 'main-content') }
+Lambdatest::Selenium::Driver.smartui_snapshot(driver, "homepage")
+```
+
+## Common Use Cases
+
+### Multi-Step Flow Testing
+
+```ruby
+driver.navigate.to "https://example.com/checkout"
+Lambdatest::Selenium::Driver.smartui_snapshot(driver, "checkout-step-1")
+
+driver.find_element(id: "next-step").click
+wait.until { driver.find_element(id: "step-2").displayed? }
+Lambdatest::Selenium::Driver.smartui_snapshot(driver, "checkout-step-2")
+```
+
+### Error Handling
+
+```ruby
+begin
+  driver.navigate.to "https://www.lambdatest.com"
+  Lambdatest::Selenium::Driver.smartui_snapshot(driver, "homepage")
+rescue => e
+  puts "Screenshot failed: #{e.message}"
+  raise
+ensure
+  driver.quit
+end
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Ruby SmartUI Tests
+
+on: [push, pull_request]
+
+jobs:
+  visual-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          cd sdk
+          gem install lambdatest-selenium-driver selenium-webdriver
+          npm install @lambdatest/smartui-cli
+      
+      - name: Run SmartUI tests
+        env:
+          PROJECT_TOKEN: ${{ secrets.SMARTUI_PROJECT_TOKEN }}
+          LT_USERNAME: ${{ secrets.LT_USERNAME }}
+          LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+        run: |
+          cd sdk
+          npx smartui exec ruby sdkCloud.rb
+```
+
+## Troubleshooting
+
+### Issue: `uninitialized constant Lambdatest::Selenium::Driver`
+
+**Solution**: Install the gem:
+```bash
+gem install lambdatest-selenium-driver
+```
+
+### Issue: `PROJECT_TOKEN is required`
+
+**Solution**: Set the environment variable:
+```bash
+export PROJECT_TOKEN='your_project_token'
+```
+
+### Issue: `ChromeDriver version mismatch` (Local)
+
+**Solution**: 
+1. Update ChromeDriver
+2. Use WebDriver Manager for automatic driver management
+3. Ensure Chrome browser is up to date
+
+### Issue: `Unauthorized` error (Cloud)
+
+**Solution**:
+1. Verify `LT_USERNAME` and `LT_ACCESS_KEY` are set correctly
+2. Check credentials in [LambdaTest Profile Settings](https://accounts.lambdatest.com/profile)
+
+## Configuration Tips
+
+### Optimizing `smartui-web.json`
+
+```json
+{
+  "web": {
+    "browsers": ["chrome", "firefox"],
+    "viewports": [
+      [1920, 1080],
+      [1366, 768],
+      [375, 667]
+    ],
+    "waitForPageRender": 30000,
+    "waitForTimeout": 2000
+  }
+}
+```
+
 ## View Results
 
 After running the tests, visit your SmartUI project dashboard to view the captured screenshots and compare them with baseline builds.
 
-## More Information
+## Additional Resources
 
-For detailed onboarding instructions, see the [SmartUI Selenium Ruby Onboarding Guide](https://www.lambdatest.com/support/docs/smartui-onboarding-selenium-ruby/).
+- [SmartUI Selenium Ruby Onboarding Guide](https://www.lambdatest.com/support/docs/smartui-onboarding-selenium-ruby/)
+- [LambdaTest Selenium Ruby Documentation](https://www.lambdatest.com/support/docs/selenium-ruby/)
+- [Ruby Documentation](https://www.ruby-lang.org/en/documentation/)
+- [Selenium Ruby Documentation](https://www.selenium.dev/selenium/docs/api/rb/)
+- [SmartUI Dashboard](https://smartui.lambdatest.com/)
+- [LambdaTest Community](https://community.lambdatest.com/)
